@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block head %} 
+<title>Welcome to the forum</title>
+{% endblock %}
+{% block body %} 
+<h2>Please log in below</h2>
+<form action ='/login', method='POST'>
+    ID <input type='text', name='id', id = 'id'>
+    <br>
+    Password <input type='string', name='password', id = 'password'>
+    <br>
+    <input type='Submit',value = Login>
+    <br>
+    <a href='/register'>Register</a>
+
+
+{% endblock %}

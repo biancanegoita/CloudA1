@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block head %} 
+<title>Welcome to the forum</title>
+{% endblock %}
+{% block body %} 
+<h2>Welcome id.id</h2>
+<h2>All posts</h2>
+{% for post in posts %}
+<h2>{{post.title}}</h2>
+<h3> {{post.content}}</h3>
+<h3>{{post.author}}</h3>
+{% endfor %}
+
+{% endblock %}

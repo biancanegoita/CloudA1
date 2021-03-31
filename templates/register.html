@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block head %} 
+<title>Welcome to the forum</title>
+{% endblock %}
+{% block body %} 
+<h2>Please register below</h2>
+<form action ='/login', method='POST'>
+    Name <input type='text', name='name', id = 'name'>
+    <br>
+    <br>
+    ID <input type='text', name='id', id = 'id'>
+    <br>
+    <br>
+    Password <input type='string', name='password', id = 'password'>
+    <br>
+    <br>
+    <input type='file', name='filename', id='filename'>
+    <br>
+    <br>
+    <input type='Submit',value = Login>
+    <br>
+    <br>
+ 
+
+
+{% endblock %}
