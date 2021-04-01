@@ -72,4 +72,4 @@ def forum():
     return render_template('forum.html', posts=all_posts)
 
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=8080,debug=True)
+    app.run(host='https://clouda1-309323.ue.r.appspot.com/', port=8080,debug=True)
