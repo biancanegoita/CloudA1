@@ -10,7 +10,7 @@ import webapp2
 from flask import Flask, render_template, request, redirect
 
 app = Flask(__name__)
-
+app.run(host='https://clouda1-309323.ue.r.appspot.com/', port=8080, debug=True)
 all_posts = [
     {
         'title': 'Post 1',
