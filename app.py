@@ -1,8 +1,17 @@
-from flask import Flask, render_template, request, redirect
-from google.cloud import datastore
+from flask import Flask, render_template, request, redirect, session
+from google.cloud import datastore, storage
+import datetime
+
 
 app = Flask(__name__)
 datastore_client = datastore.Client()
+gcs = storage.Client()
+bucket = gcs.get_bucket('imagesclouda1')
+
+entity = datastore.Entity(key=datastore_client.key('user'))
+query = datastore_client.query(kind='user')
+msg = ["ID or password invalid","user already exists","The old password is incorrect"]
+app.secret_key='secret key'
 
 def store_time(dt):
     entity = datastore.Entity(key=datastore_client.key('visit'))
@@ -20,87 +29,172 @@ def fetch_times(limit):
 
     return times
 
-all_posts = [
-    {
-        'title': 'Post 1',
-        'content': 'This is the content of post 1',
-        'author':'s38060120'
-    },
-    {
-        'title': 'Post 2',
-        'content': 'This is the content of post 2',
-    },
-    {
-        'title': 'Post 3',
-        'content': 'This is the content of post 3',
-    },
-    {
-        'title': 'Post 4',
-        'content': 'This is the content of post 4',
-    },
-    {
-        'title': 'Post 4',
-        'content': 'This is the content of post 4',
-    },
-    {
-        'title': 'Post 5',
-        'content': 'This is the content of post 5',
-    },
-    {
-        'title': 'Post 6',
-        'content': 'This is the content of post 6',
-    },
-    {
-        'title': 'Post 7',
-        'content': 'This is the content of post 7',
-    }
 
-]
 
 @app.route('/', methods=['GET','POST'])
-
-def index():
-    store_time(datetime.datetime.now())
-    times = fetch_times(10)
-    return render_template('login.html')
-    # if request.method == 'POST':
-    #     id = request.form['ID']
-    #     pwd = request.form['password']
-    #     if not id or not pwd:
-    #         msg == "ID or passoword invalid"
-    #         return render_tmeplate('login.html',message = msg)
-    #     else:
-    #         return redirect('/forum', id=id)
-    # else:
-    #     return render_template('login.html')
-
-@app.route('/login', methods=['GET','POST'])
-
-def login(id,password):
+def login():
     if request.method == 'POST':
-        return render_template('index.html')
-        # query = datastore_client.query(kind='user')
-        # query.order = ['id']
-        # query1 = datastore_client.query(kind='user')
-        # query.order = ['password']
-        # id = query.fetch(id=id)
-        # password = query.fetch(pwd = passoword)
-def fetch_user(limit):
-    query = datastore_client.query(kind='user')
-    user = list (query.fetch(limit = limit))
-    return user
+        id = request.form['ID']
+        password = request.form['password']
 
+        query=datastore_client.query(kind='user')
+        activeuser = list(query.add_filter('id','=',id).fetch())
+        
+        #user_name=activeuser[0]['user_name']
+        print(activeuser)
+        if not activeuser or (activeuser[0]['password']!=password):
+            return render_template('login.html', message=msg[0])
+        else:
+            session['id'] = id
+            user_name = activeuser[0]['user_name']
+           # msg1 == "we got your info"
+            return redirect('/forum')        
+    else:
+        return render_template('login.html')
 
 @app.route('/register', methods=['GET','POST'])
 
 def register():
-    return render_template('register.html')
+    if request.method == 'POST':
+        id = request.form['ID']
+        password = request.form['password']
+        user_name = request.form['user_name']
+        image = request.files['filename']
+        user_exists = list(query.add_filter('id','=',id).fetch())
+        user_exists1 = list(query.add_filter('user_name','=',user_name).fetch())
+        
+        if user_exists or user_exists1:
+            return render_template('register.html', message = msg[2])
+        else:
+            if image:
+                blob = bucket.blob(image.filename)
+                blob.upload_from_string(
+                    image.read(),
+                    content_type=image.content_type
+                )
+                image_url = blob.public_url
+                entity = datastore.Entity(datastore_client.key('user'))
+                entity.update(
+                    {
+                        "id":id,
+                        "user_name":user_name,
+                        "password":password,
+                        "image_url":image_url,
+                    }
+                )
+                datastore_client.put(entity)
+                return redirect('/')
+    else:
+        return render_template('register.html')
 
 @app.route('/forum', methods=['GET','POST'])
     
 def forum():
-    return render_template('forum.html', posts=all_posts)
+    query = datastore_client.query(kind='user')
+    current_user= list(query.add_filter('id','=',session['id']).fetch())
+    if request.method == 'GET':
+       
+        query_post = datastore_client.query(kind='post')
+       # query_post.order['-date_created']
+        posts = list(query_post.fetch(limit=10))
+        
+        
+        return render_template('forum.html', posts=posts, user=current_user[0])
+        
+    else:
+        subject = request.form['subject']
+        message = request.form['message']
+        image = request.files['filename']
+
+        if image:
+            blob = bucket.blob(image.filename)
+            blob.upload_from_string(
+                image.read(),
+                content_type = image.content_type
+            )
+            
+            image_url = blob.public_url
+        entity = datastore.Entity(datastore_client.key('post'))
+        entity.update(
+                {
+                    "Subject":subject,
+                    "Message":message,
+                    "Author": current_user[0]['id'],
+                    "Date_created": datetime.datetime.utcnow(),
+                    "image_url": image_url
+                }
+            )
+        datastore_client.put(entity)
+
+
+        return redirect('/forum')
+
+
+
+@app.route('/user', methods=['GET','POST'])
+def user():
+     if request.method=='GET':
+        
+        
+        query_post = datastore_client.query(kind='post')
+       # query_post.order['-date_created']
+        posts = list(query_post.add_filter('Author','=',session['id']).fetch())
+        query = datastore_client.query(kind='user')
+        user = list(query.add_filter('id','=',session['id']).fetch())
+
+        return render_template('user.html',posts=posts,user_name=user[0]['user_name'])
+     
+     else:
+        
+        old_pwd = request.form['password1']
+        new_pwd = request.form['password2']
+        query = datastore_client.query(kind='user')
+        pwd_exists = list(query.add_filter('id','=',session['id']).fetch())
+        key = datastore_client.key('user',pwd_exists[0].key.id)
+        user = datastore_client.get(key)
+        print(user)
+        if user['password']==old_pwd:
+            user['password']=new_pwd
+            datastore_client.put(user)
+            session.pop('id',None)
+            return redirect('/')
+        else:
+            return render_template('user.html', message=msg[2])
+          
+  
+     return render_template('user.html')
+@app.route('/edit/<int:postid>')
+def edit(postid):
+    key = datastore_client.key('post',postid)
+    post=datastore_client.get(key)
+    if request.method=='GET':
+        return render_template('edit.html',post=post)
+    else:
+        subject = request.form['subject']
+        message = request.form['message']
+        image = request.files['filename']
+
+        if image:
+            blob = bucket.blob(image.filename)
+            blob.upload_from_string(
+                image.read(),
+                content_type = image.content_type
+            )
+            
+            image_url = blob.public_url
+            post['image_url']=image_url
+        post['Subject']=subject
+        post['Message']=message
+        post_created = datetime.datetime.utcnow()
+        datastore_client.put(post)
+        return refirect('/forum')
+    print(post)
+    
+@app.route('/logout')
+def logout():
+    session.pop('id', none)
+    return redirect('/')
 
 if __name__ == "__main__":
-    app.run(host='120.0.0.1', port=8080,debug=True)
+    app.run(host='localhost',debug=True)
 

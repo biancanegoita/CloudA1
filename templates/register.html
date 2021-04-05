@@ -4,18 +4,19 @@
 <title>Welcome to the forum</title>
 {% endblock %}
 {% block body %} 
+<p>{{message}}</p>
 <h2>Please register below</h2>
-<form action ='/register', method='POST'>
-    Name <input type='text', name='name', id = 'name'>
+<form action ='/register', method='POST', enctype="multipart/form-data">
+    Name <input type='text', name='user_name', id = 'user_name'>
     <br>
     <br>
-    ID <input type='text', name='id', id = 'id'>
+    ID <input type='text', name='ID', id = 'ID'>
     <br>
     <br>
-    Password <input type='string', name='password', id = 'password'>
+    Password <input type='text', name='password', id = 'password'>
     <br>
     <br>
-    <input type='file', name='filename', id='filename'>
+    <input type='file', name='filename', id='filename', accept="image/*">
     <br>
     <br>
     <input type='Submit',value = Login>

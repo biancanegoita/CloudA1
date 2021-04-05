@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block body %}
+<form action ='/forum', method ='POST'>
+    
+    Subject <input type='text', name='subject', id ='subject', required, value={{post.Subject}}>
+    <br>
+    Meessage Text <input type='text', name='message', id ='message', value = {{post.Message}}>
+    <br>
+    <img src="{{post.image_url}}", width = "120px", height = "120px">
+    <input type='file', name='filename', id='filename'>
+    <br>
+    <input type='Submit',value ='Submit'>
+</form>
+{% endblock %}

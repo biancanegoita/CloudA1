@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block head %} 
+<title>Welcome to your profile</title>
+{% endblock %}
+{% block body %} 
+<h2>Password edit area</h2>
+<h2></h2> 
+{% for time in times %} 
+<p>{{ time['timestamp'] }}</p> 
+{% endfor %}
+<p>{{message}}</p>
+<form action ='/user', method ='POST'>
+    Old Password <input type='text', name='password1', id ='password1', required>
+    <br>
+    New Password<input type='text', name='password2', id ='password2', required>
+    <br>
+    <input type='Submit',value = 'Change'>
+    <br>
+<h2>All posts</h2>
+{% for post in posts%}
+<h3>{{post.Subject}}</h2>
+<h3>{{post.Message}}</h3>
+<h3>{{post.Author}}</h3>
+<h3>{{post.Date_created}}</h3>
+<img src="{{post.image_url}}", width = "120px", height = "120px">
+<a href='/edit/{{post.key.id}}'>Edit Post</a>
+{% endfor %}
+
+
+{% endblock %}

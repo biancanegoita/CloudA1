@@ -5,16 +5,16 @@
 {% endblock %}
 {% block body %} 
 <h2>Please log in below</h2>
-<h2>Last 10 visits</h2> 
 {% for time in times %} 
 <p>{{ time['timestamp'] }}</p> 
 {% endfor %}
-<form action ='/', method='POST'>
-    ID <input type='text', name='id', id = 'id'>
+<p>{{message}}</p>
+<form action ='/', method ='POST'>
+    ID <input type='text' name='ID' id ='ID', required>
     <br>
-    Password <input type='string', name='password', id = 'password'>
+    Password <input type='integer' name='password' id ='password' required>
     <br>
-    <input type='Submit',value = Login>
+    <input type='Submit',value = 'Login'>
     <br>
     <a href='/register'>Register</a>
 
